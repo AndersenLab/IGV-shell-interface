@@ -8,11 +8,11 @@ import pandas as pd
 #VCF file formats are supposed to be standardized.
 
 
-def import_testfile(testfile): # Reads in a VCF file and extracts the positions to snapshot
-	df = pd.read_table(testfile, header=None)
-	df = df.rename(columns = {0:'chromosome', 1:'start_position', 2:'name', 3:'sequence', 4:'replacement'})
-	df['end_position'] = df[7].map(lambda x: (x).split(';')[4][4:])
-	df = df[['chromosome', 'start_position', 'end_position']].astype(str)
+def import_testfile(testfile = 'for_garth.vcf'): # Reads in a VCF file and extracts the positions to snapshot
+	df = pd.read_table(testfile, skiprows=57)
+	df = df.rename(columns={'#CHROM':'CHROM'})
+	df['END'] = df['INFO'].map(lambda x: x.split(';')[4][4:])
+	df = df.astype(str)
 	return(df)
 
 def strain_module(strain = False): # Finds and loads a .bam and .bai file from the elegansvariation database
@@ -22,7 +22,7 @@ def strain_module(strain = False): # Finds and loads a .bam and .bai file from t
 	df = df.ix[:,list(~df.isnull().all())]
 	bam = df[df[2] == strain + '.bam'][11].values[0]
 	bai = df[df[2] == strain + '.bam.bai'][7].values[0]
-	result = ['load ' + bam + ' index=' + bai]
+	result = ['load ' + bam + ' index=' + bai + ' name=' +strain]
 	return(result)
 
 def goto_module(chromosome=False, start=False, end=False): # Makes a list of the positions to visit
@@ -45,13 +45,21 @@ def genome_module(genome, snapshot_directory, new=True): # Loads the genome and 
 		batch += ['genome '+genome]
 	return(batch)
 
-def construct(strains=['XZ1516'], testfile='/Users/garth/Box Sync/20171010_IGV_automation/indel_tests.txt', genome='WS245', snapshot_directory='Desktop'): # Brings all the modules together into a batch file
+def construct(testfile='for_garth.vcf', genome='WS245', snapshot_directory='Desktop', stack_tracks=True): # Brings all the modules together into a batch file
 	df = import_testfile(testfile)
-	gotos = df.apply(lambda x: goto_module(chromosome=x['chromosome'], start=x['start_position'], end=x['end_position']), axis = 1).sum()
+	strains = [s for s in df.columns if s not in ['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'END']]
+	gotos = df.apply(lambda x: goto_module(chromosome=x['CHROM'], start=x['POS'], end=x['END']), axis = 1).sum()
 	batch = genome_module(genome, snapshot_directory)
-	for strain in strains:
-		batch += strain_module(strain)
+
+	if not stack_tracks:
+		for strain in strains:
+			batch += strain_module(strain)
+			batch += gotos
+	elif stack_tracks:
+		for strain in strains:
+			batch += strain_module(strain)
 		batch += gotos
+
 	batch = '\n'.join(batch)
 	file = open('testfile.txt','w') 
 	file.write(batch) 
