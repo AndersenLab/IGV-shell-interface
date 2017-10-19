@@ -1,5 +1,5 @@
 import pandas as pd
-
+import os
 
 #Have a QTL, as part of CEGWAS output they do fine mapping, look at most correlated variants within QTL, have confidence interval. Has a ref and alt group. So that would be regions across multiple strains. 
 #Other use case validate VCF outputs from various variant callers. Pull out indel calls of various sizes, pick one strain that is ref and one that is alt, refs are 0/0, alts are 1/1 and hets are 0/1. Shouldn't be any het calls. Dan did heterozygous polarization, push their genotype into the closest homozygous genome. 
@@ -45,7 +45,9 @@ def genome_module(genome, snapshot_directory, new=True): # Loads the genome and 
 		batch += ['genome '+genome]
 	return(batch)
 
-def construct(testfile='for_garth.vcf', genome='WS245', snapshot_directory='Desktop', stack_tracks=True): # Brings all the modules together into a batch file
+def construct(testfile='for_garth.vcf', genome='WS245', snapshot_directory=False, stack_tracks=True): # Brings all the modules together into a batch file
+	if not snapshot_directory:
+		snapshot_directory = os.getcwd()
 	df = import_testfile(testfile)
 	strains = [s for s in df.columns if s not in ['CHROM', 'POS', 'ID', 'REF', 'ALT', 'QUAL', 'FILTER', 'INFO', 'FORMAT', 'END']]
 	gotos = df.apply(lambda x: goto_module(chromosome=x['CHROM'], start=x['POS'], end=x['END']), axis = 1).sum()

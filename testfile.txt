@@ -1,5 +1,5 @@
 new
-snapshotDirectory Desktop
+snapshotDirectory /Users/garth/Box Sync/IGV-automation
 genome WS245
 load https://northwestern.box.com/shared/static/8vnzn6hovlyodxzve2xn0n1flenlgeqm.bam index=https://northwestern.box.com/shared/static/ya4ours2hgsni4by854u16ta7rcre23z.bai name=CB4858
 load https://northwestern.box.com/shared/static/nc78sdwmo010khd64ecgjmjkmnxki6ci.bam index=https://northwestern.box.com/shared/static/p61uvw6s7dn6ux5g6efjrdqd0psllmyb.bai name=DL238
